@@ -1,0 +1,19 @@
+2025-09-13 21:32:58,011 - INFO - Database initialized successfully.
+2025-09-13 21:35:42,632 - INFO - Database initialized successfully.
+2025-09-13 21:37:15,874 - INFO - Database initialized successfully.
+2025-09-13 21:41:34,838 - INFO - Database initialized successfully.
+2025-09-13 21:43:04,375 - INFO - Database initialized successfully.
+2025-09-13 21:43:18,238 - INFO - Database initialized successfully.
+2025-09-13 21:43:46,259 - INFO - Database initialized successfully.
+2025-09-13 21:44:53,653 - INFO - Database initialized successfully.
+2025-09-13 21:45:39,541 - INFO - Database initialized successfully.
+2025-09-13 21:48:08,927 - INFO - Database initialized successfully.
+2025-09-13 21:49:48,045 - WARNING - Failed to find selectors for URL: https://amzn.in/d/5kVmvRl
+2025-09-13 21:51:24,508 - WARNING - Failed to find selectors for URL: https://amzn.in/d/5kVmvRl
+2025-09-13 21:51:54,033 - INFO - Database initialized successfully.
+2025-09-13 21:52:26,718 - INFO - Scraped from Amazon: Titan Analog OffWhite Dial Men's Watch NM1712YM02 / NL1712YM02 at \u20b92145.0
+2025-09-13 21:52:37,340 - INFO - Scraped from Amazon: Titan Analog OffWhite Dial Men's Watch NM1712YM02 / NL1712YM02 at \u20b92145.0
+2025-09-13 21:52:37,371 - INFO - Notification sent: Price Drop Alert! | The price of Titan Analog OffWhite Dial Men's Watch NM1712YM02 / NL1712YM02 has dropped to \u20b92145.0!
+Original target was \u20b92255.0.
+2025-09-13 21:54:39,444 - INFO - Database initialized successfully.
+2025-09-13 21:57:36,304 - INFO - Database initialized successfully.
