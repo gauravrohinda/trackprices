@@ -17,7 +17,10 @@ import threading
 import hashlib
 import random
 import os
-from concurrent.futures import ThreadPoolExecutor
+
+# Asynchronous programming libraries for faster I/O operations
+import asyncio
+import aiohttp
 
 # External dependencies for platform-specific notifications and MongoDB
 from plyer import notification
@@ -41,9 +44,6 @@ USER_AGENTS = [
 # in the packaged executable, as environment variables are unreliable.
 MONGO_URI = "mongodb+srv://gjain0279_db_user:L12D3qn8rLwlnfxZ@database.dqluhni.mongodb.net/?retryWrites=true&w=majority&appName=Database"
 DB_NAME = "price_tracker_db"
-# Use a thread pool for concurrent scraping tasks to improve performance
-THREAD_POOL = ThreadPoolExecutor(max_workers=5)
-
 
 # ==============================================================================
 # Database Functions (MongoDB)
@@ -183,12 +183,10 @@ def add_price_history(product_id, price):
 def get_product_history(product_id):
     """Retrieves the price history for a specific product."""
     db = get_db_client()
-    history = []
     if db is not None:
         price_history_collection = db.price_history
-        for record in price_history_collection.find({"product_id": product_id}).sort("timestamp", pymongo.DESCENDING):
-            history.append((record["price"], record["timestamp"]))
-    return history
+        history = list(price_history_collection.find({"product_id": product_id}).sort("timestamp", pymongo.DESCENDING))
+    return [(record["price"], record["timestamp"]) for record in history]
 
 def delete_product_from_db(product_id):
     """Deletes a product and its history from the database."""
@@ -208,11 +206,12 @@ def delete_product_from_db(product_id):
 # Scraping Functions
 # ==============================================================================
 
-def scrape_product(url):
+async def scrape_product_async(session, url):
     """
-    Scrapes a product's name and price from supported e-commerce sites.
+    Asynchronously scrapes a product's name and price from supported e-commerce sites.
     
     Args:
+        session (aiohttp.ClientSession): The session to use for the request.
         url (str): The URL of the product page.
         
     Returns:
@@ -220,54 +219,97 @@ def scrape_product(url):
     """
     try:
         headers = {'User-Agent': random.choice(USER_AGENTS)}
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
+        async with session.get(url, headers=headers, timeout=15) as response:
+            response.raise_for_status()
+            text = await response.text()
+            soup = BeautifulSoup(text, 'html.parser')
 
-        # Logic for different websites
-        if "amazon.in" in url or "amazon.com" in url:
-            name_elem = soup.select_one('#productTitle')
-            price_elem = soup.select_one('.a-price-whole, #corePrice_feature_div .a-offscreen')
-            if name_elem and price_elem:
-                name = name_elem.get_text().strip()
-                price_text = price_elem.get_text().replace(',', '').strip()
-                price_match = re.search(r'\$?(\d+\.?\d*)', price_text)
-                if price_match:
-                    price = float(price_match.group(1))
-                    logging.info(f"Scraped from Amazon: {name} at ₹{price}")
-                    return name, price
+            # Logic for different websites
+            if "amazon.in" in url or "amazon.com" in url:
+                name_elem = soup.select_one('#productTitle')
+                price_elem = soup.select_one('.a-price-whole, #corePrice_feature_div .a-offscreen')
+                if name_elem and price_elem:
+                    name = name_elem.get_text().strip()
+                    price_text = price_elem.get_text().replace(',', '').strip()
+                    price_match = re.search(r'\$?(\d+\.?\d*)', price_text)
+                    if price_match:
+                        price = float(price_match.group(1))
+                        logging.info(f"Scraped from Amazon: {name} at ₹{price}")
+                        return name, price
 
-        elif "flipkart.com" in url:
-            name_elem = soup.select_one('span.B_NuCI')
-            price_elem = soup.select_one('div._30jeq3, div._16Jk6d ._30jeq3')
-            if name_elem and price_elem:
-                name = name_elem.get_text().strip()
-                price_text = price_elem.get_text().replace(',', '').strip()
-                price_match = re.search(r'\$?(\d+\.?\d*)', price_text)
-                if price_match:
-                    price = float(price_match.group(1))
-                    logging.info(f"Scraped from Flipkart: {name} at ₹{price}")
-                    return name, price
-                    
-        elif "myntra.com" in url:
-            name_elem = soup.select_one('.pdp-title')
-            price_elem = soup.select_one('.pdp-price .pdp-price-amount')
-            if name_elem and price_elem:
-                name = name_elem.get_text().strip()
-                price_text = price_elem.get_text().replace(',', '').strip()
-                price_match = re.search(r'\$?(\d+\.?\d*)', price_text)
-                if price_match:
-                    price = float(price_match.group(1))
-                    logging.info(f"Scraped from Myntra: {name} at ₹{price}")
-                    return name, price
+            elif "flipkart.com" in url:
+                name_elem = soup.select_one('span.B_NuCI')
+                price_elem = soup.select_one('div._30jeq3, div._16Jk6d ._30jeq3')
+                if name_elem and price_elem:
+                    name = name_elem.get_text().strip()
+                    price_text = price_elem.get_text().replace(',', '').strip()
+                    price_match = re.search(r'\$?(\d+\.?\d*)', price_text)
+                    if price_match:
+                        price = float(price_match.group(1))
+                        logging.info(f"Scraped from Flipkart: {name} at ₹{price}")
+                        return name, price
+                        
+            elif "myntra.com" in url:
+                name_elem = soup.select_one('.pdp-title')
+                price_elem = soup.select_one('.pdp-price .pdp-price-amount')
+                if name_elem and price_elem:
+                    name = name_elem.get_text().strip()
+                    price_text = price_elem.get_text().replace(',', '').strip()
+                    price_match = re.search(r'\$?(\d+\.?\d*)', price_text)
+                    if price_match:
+                        price = float(price_match.group(1))
+                        logging.info(f"Scraped from Myntra: {name} at ₹{price}")
+                        return name, price
 
-        logging.warning(f"Failed to find selectors for URL: {url}")
-        return None, None
-    except requests.exceptions.RequestException as e:
+            logging.warning(f"Failed to find selectors for URL: {url}")
+            return None, None
+    except aiohttp.ClientError as e:
         logging.error(f"Network error scraping {url}: {e}")
     except Exception as e:
         logging.error(f"Error scraping {url}: {e}")
     return None, None
+
+async def check_prices_async(user_id):
+    """
+    Checks the prices of all products for a specific user concurrently using aiohttp.
+    """
+    products = get_user_products(user_id)
+    if not products:
+        return
+
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for product in products:
+            task = asyncio.create_task(check_and_update_product(session, product))
+            tasks.append(task)
+        await asyncio.gather(*tasks)
+
+async def check_and_update_product(session, product):
+    """Scrapes and updates a single product, used by the asyncio event loop."""
+    product_id = product["id"]
+    url = product["url"]
+    name = product["name"]
+    low_price = product["low_price"]
+    high_price = product["high_price"]
+    last_price = product["latest_price"]
+
+    current_name, current_price = await scrape_product_async(session, url)
+    if current_price is None:
+        return
+
+    # Check for price drops and increases
+    if current_price <= low_price:
+        send_notification("Price Drop Alert!", f"The price of {current_name} has dropped to ₹{current_price}!\nOriginal target was ₹{low_price}.")
+    elif current_price >= high_price and high_price > 0:
+        send_notification("Price Increase Alert!", f"The price of {current_name} has increased to ₹{current_price}!\nOriginal high price was ₹{high_price}.")
+    elif last_price != "N/A" and current_price < float(last_price):
+        send_notification("Price Drop!", f"The price of {current_name} has dropped to ₹{current_price}.")
+    elif last_price != "N/A" and current_price > float(last_price):
+        send_notification("Price Increase!", f"The price of {current_name} has increased to ₹{current_price}.")
+
+    # Insert new price history
+    add_price_history(product_id, current_price)
+
 
 # ==============================================================================
 # Notification Functions
@@ -285,42 +327,6 @@ def send_notification(title, message):
     except Exception as e:
         logging.error(f"Failed to send notification: {e}")
 
-def check_single_product(product):
-    """Scrapes and updates a single product, used by the thread pool."""
-    product_id = product["id"]
-    url = product["url"]
-    name = product["name"]
-    low_price = product["low_price"]
-    high_price = product["high_price"]
-    last_price = product["latest_price"]
-
-    current_name, current_price = scrape_product(url)
-    if current_price is None:
-        return
-
-    # Check for price drops and increases
-    if current_price <= low_price:
-        send_notification("Price Drop Alert!", f"The price of {current_name} has dropped to ₹{current_price}!\nOriginal target was ₹{low_price}.")
-    elif current_price >= high_price and high_price > 0:
-        send_notification("Price Increase Alert!", f"The price of {current_name} has increased to ₹{current_price}!\nOriginal high price was ₹{high_price}.")
-    elif last_price != "N/A" and current_price < float(last_price):
-        send_notification("Price Drop!", f"The price of {current_name} has dropped to ₹{current_price}.")
-    elif last_price != "N/A" and current_price > float(last_price):
-        send_notification("Price Increase!", f"The price of {current_name} has increased to ₹{current_price}.")
-
-    # Insert new price history
-    add_price_history(product_id, current_price)
-
-def check_prices(user_id):
-    """
-    Checks the prices of all products for a specific user concurrently.
-    """
-    products = get_user_products(user_id)
-    if not products:
-        return
-
-    # Use a ThreadPoolExecutor to check prices concurrently
-    THREAD_POOL.map(check_single_product, products)
 
 # ==============================================================================
 # GUI Classes
@@ -581,7 +587,14 @@ class App(tk.Tk):
 
     def start_scheduled_checks(self):
         # Start the initial check and then schedule
-        self.check_prices_now()
+        # It runs in a separate thread to keep the GUI responsive
+        def check_in_thread():
+            asyncio.run(check_prices_async(self.user_id))
+            self.load_products()
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            self.status_var.set(f"Last checked: {timestamp} | Next check in 12 hours.")
+        
+        threading.Thread(target=check_in_thread, daemon=True).start()
         schedule.every(12).hours.do(self.check_prices_now)
         
         def run_schedule():
@@ -595,7 +608,7 @@ class App(tk.Tk):
         self.status_var.set("Checking prices...")
         
         def run_in_thread():
-            check_prices(self.user_id)
+            asyncio.run(check_prices_async(self.user_id))
             self.load_products()
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.status_var.set(f"Last checked: {timestamp} | Next check in 12 hours.")
@@ -620,7 +633,14 @@ class App(tk.Tk):
             messagebox.showerror("Error", "Prices must be valid numbers.")
             return
             
-        name, price = scrape_product(url)
+        # Use aiohttp to get the initial price before adding
+        async def get_initial_price():
+            async with aiohttp.ClientSession() as session:
+                name, price = await scrape_product_async(session, url)
+                return name, price
+
+        name, price = asyncio.run(get_initial_price())
+
         if not name:
             messagebox.showerror("Error", "Failed to scrape product details. Check the URL or try again.")
             return
