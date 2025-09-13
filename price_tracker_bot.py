@@ -37,11 +37,11 @@ USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko'
 ]
 
-# Get MongoDB connection string from environment variables for security.
-# It falls back to the provided string if the environment variable is not set.
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://gjain0279_db_user:L12D3qn8rLwlnfxZ@database.dqluhni.mongodb.net/?retryWrites=true&w=majority&appName=Database")
+# Get MongoDB connection string. This is hardcoded to ensure it works
+# in the packaged executable, as environment variables are unreliable.
+MONGO_URI = "mongodb+srv://gjain0279_db_user:L12D3qn8rLwlnfxZ@database.dqluhni.mongodb.net/?retryWrites=true&w=majority&appName=Database"
 DB_NAME = "price_tracker_db"
-# Use a thread pool for concurrent scraping tasks
+# Use a thread pool for concurrent scraping tasks to improve performance
 THREAD_POOL = ThreadPoolExecutor(max_workers=5)
 
 
@@ -65,8 +65,11 @@ def setup_db_indexes():
     db = get_db_client()
     if db is not None:
         try:
+            # Create a unique index for the username
             db.users.create_index([("username", pymongo.ASCENDING)], unique=True)
+            # Create a compound index for user_id and url for fast product lookups
             db.products.create_index([("user_id", pymongo.ASCENDING), ("url", pymongo.ASCENDING)], unique=True)
+            # Create a compound index for price history lookups
             db.price_history.create_index([("product_id", pymongo.ASCENDING), ("timestamp", pymongo.DESCENDING)])
             logging.info("Database indexes created or verified.")
         except Exception as e:
