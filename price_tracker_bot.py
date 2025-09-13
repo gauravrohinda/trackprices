@@ -45,6 +45,7 @@ USER_AGENTS = [
 MONGO_URI = "mongodb+srv://gjain0279_db_user:L12D3qn8rLwlnfxZ@database.dqluhni.mongodb.net/?retryWrites=true&w=majority&appName=Database"
 DB_NAME = "price_tracker_db"
 
+
 # ==============================================================================
 # Database Functions (MongoDB)
 # ==============================================================================
