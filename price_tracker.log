@@ -96,3 +96,12 @@ Original target was \u20b92699.0.
 2025-09-14 00:17:24,175 - INFO - Successfully connected to MongoDB.
 2025-09-14 00:17:33,655 - INFO - Successfully connected to MongoDB.
 2025-09-14 00:17:55,374 - INFO - Successfully connected to MongoDB.
+2025-09-14 00:18:48,270 - INFO - Successfully connected to MongoDB.
+2025-09-14 00:18:48,780 - INFO - Database indexes created or verified.
+2025-09-14 00:19:20,541 - INFO - Successfully connected to MongoDB.
+2025-09-14 00:19:30,149 - INFO - Successfully connected to MongoDB.
+2025-09-14 00:19:34,949 - INFO - Successfully connected to MongoDB.
+2025-09-14 00:19:44,079 - INFO - Successfully connected to MongoDB.
+2025-09-14 00:19:56,670 - INFO - Successfully connected to MongoDB.
+2025-09-14 00:23:00,907 - INFO - Scraped from Amazon: GOBOULT Newly Launched Crown Smart Watch 1.95'' Screen, BT Calling, Working Crown, Zinc Alloy Frame, 900 Nits Brightness, AI Voice Assistant, SpO2 Monitoring, 120+ Sports Mode (Pure Black) at \u20b9899.0
+2025-09-14 00:23:32,351 - ERROR - Failed to connect to MongoDB: ac-58pv0j7-shard-00-02.dqluhni.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),ac-58pv0j7-shard-00-01.dqluhni.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),ac-58pv0j7-shard-00-00.dqluhni.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 68c5bd8c9ac1ae324985fa99, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('ac-58pv0j7-shard-00-00.dqluhni.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('ac-58pv0j7-shard-00-00.dqluhni.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('ac-58pv0j7-shard-00-01.dqluhni.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('ac-58pv0j7-shard-00-01.dqluhni.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('ac-58pv0j7-shard-00-02.dqluhni.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('ac-58pv0j7-shard-00-02.dqluhni.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
